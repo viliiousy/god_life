@@ -8,8 +8,8 @@
 <title>God Life</title>
 <style>
 :root{--bg:#06060b;--b2:#0d0d15;--b3:#14141f;--b4:#1a1a28;--t:#e8e8f0;--t2:#9898aa;--t3:#5a5a6e;--ac:#7c6aff;--a2:#a78bfa;--gl:rgba(124,106,255,.15);--rd:#ff6b6b;--rb:rgba(255,107,107,.08);--bl:#60a5fa;--gn:#4ade80;--gb:rgba(74,222,128,.08);--am:#fbbf24;--ab:rgba(251,191,36,.08);--tl:#2dd4bf;--ch:#34d399;--bd:rgba(255,255,255,.06);--r:12px;--s:8px}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:50px}
-.app{max-width:480px;margin:0 auto}
+*{margin:0;padding:0;box-sizing:border-box}html,body{overflow-x:hidden}body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:50px;touch-action:pan-y}
+.app{max-width:480px;margin:0 auto;overflow-x:hidden}
 .hero{padding:max(env(safe-area-inset-top),14px) 14px 2px;text-align:center;position:relative}
 .hero::before{content:'';position:absolute;top:-60%;left:-30%;width:160%;height:160%;background:radial-gradient(ellipse,rgba(124,106,255,.08),transparent 70%);pointer-events:none}
 .hero h1{font-size:20px;font-weight:800;color:#fff}
@@ -122,7 +122,7 @@
 .np-units{display:flex;gap:4px;justify-content:center;margin:6px 0}
 .np-units button{padding:4px 10px;border-radius:var(--s);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--bd);background:var(--b3);color:var(--t3)}
 .np-units button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
-.wk-mode{position:relative;background:var(--bg);overflow-y:auto;padding:16px;min-height:100vh}
+.wk-mode{position:relative;background:var(--bg);overflow-x:hidden;overflow-y:auto;padding:16px;min-height:100vh}
 .wk-mode .wk-hdr{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px}
 .wk-mode .wk-hdr h2{font-size:18px;font-weight:800;color:#fff}
 .wk-mode .wk-close{font-size:13px;color:var(--t3);cursor:pointer;padding:6px 10px;background:var(--b3);border-radius:var(--s);border:1px solid var(--bd)}
@@ -159,7 +159,7 @@ button:active{transform:scale(0.96);opacity:0.85}
 </div>
 <div class="mbg" id="mBg" onclick="if(event.target===this)cM()"><div class="mdl" id="mB"></div></div>
 <div class="np-bg" id="npBg" onclick="if(event.target===this)npClose()"><div class="np-box" id="npBox"></div></div>
-<div id="wkMode" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:180;overflow-y:auto"></div>
+<div id="wkMode" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:180;overflow-x:hidden;overflow-y:auto"></div>
 <input type="file" id="fIn" accept=".json" style="display:none" onchange="doImp(this)">
 <input type="file" id="fWo" accept=".json" style="display:none" onchange="doWoImp(this)">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -707,7 +707,7 @@ if(field==='wt'){npState.val=st.wt;npState.unit=st.wu;npState.step=1}
 else{npState.val=st.reps;npState.unit='회';npState.step=1}
 npState._wkSi=si;npState._isWk=true;
 npRender();$('npBg').className='np-bg on'}
-function saveRoutine(){var name=prompt('루틴 이름 (예: 수훈 중급 헬스)');if(!name)return;var d=gD();if(!d.woHist)d.woHist=[];d.woHist.push({name:name,wo:JSON.parse(JSON.stringify(d.wo)),saved:dk(now)});sv(d);alert('"'+name+'" 저장 완료!');R()}
+function saveRoutine(){var name=prompt('루틴 이름 (예: 기철 중급 헬스)');if(!name)return;var d=gD();if(!d.woHist)d.woHist=[];d.woHist.push({name:name,wo:JSON.parse(JSON.stringify(d.wo)),saved:dk(now)});sv(d);alert('"'+name+'" 저장 완료!');R()}
 function newRoutine(){var name=prompt('새 루틴 이름 (예: 초보자 3분할)');if(!name)return;
 if(gD().wo.length&&!confirm('현재 루틴을 새 루틴으로 교체합니다.\n(현재 루틴을 먼저 저장하시겠어요?\n취소→저장 먼저, 확인→바로 새로 만들기)'))return;
 var d=gD();d.wo=[];sv(d);
