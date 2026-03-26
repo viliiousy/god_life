@@ -440,7 +440,7 @@ h+='<div style="font-size:8px;color:var(--t3);margin:0 0 4px;text-align:center">
 d.wo.forEach(function(day,i){h+='<div class="dp'+(i===todayIdx?' on':'')+'" id="dp'+i+'"><div class="cd">';
 h+='<div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 5px"><span style="font-size:13px;font-weight:700">'+day.name+(day.days&&day.days.length?' <span style="font-size:10px;color:var(--t3)">'+day.days.map(function(di){return DOW[di]}).join(' ')+'</span>':'')+'</span><div><button class="ebtn" style="margin-right:3px" onclick="editWoD('+i+')">편집</button><button class="ebtn" style="background:var(--rb);color:var(--rd);border-color:rgba(255,107,107,.2)" onclick="delWoD('+i+')">삭제</button></div></div>';
 if(day.exercises.length){day.exercises.forEach(function(x,xi){
-h+='<div class="x"><div class="xt"><div class="xn">'+x.n+'</div>'
+h+='<div class="x"><div class="xt"><div class="xn">'+x.n+' <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(x.n+' 운동 자세')+'&sp=CAMSAhAB" target="_blank" style="font-size:8px;color:var(--rd);text-decoration:none;vertical-align:middle">▶</a></div>'
 +(x.wt?'<span class="wk-val" onclick="npOpen('+i+','+xi+',\'wt\')">'+x.wt+(x.wu||'kg')+'</span>':'')
 +(x.reps?'<span class="wk-val" onclick="npOpen('+i+','+xi+',\'reps\')">'+x.reps+'회</span>':'')
 +(x.s?'<span class="wk-val" onclick="npOpen('+i+','+xi+',\'s\')">'+x.s+'세트</span>':'')
@@ -507,59 +507,129 @@ day.exercises.forEach(function(x,j){h+='<div class="mi"><button class="midel" on
 if(j>0)h+='<button style="width:24px;height:24px;border-radius:4px;border:1px solid var(--bd);background:var(--b3);color:var(--t2);font-size:10px;cursor:pointer;margin-left:2px" onclick="mvEx('+i+','+j+',-1)">↑</button>';
 if(j<day.exercises.length-1)h+='<button style="width:24px;height:24px;border-radius:4px;border:1px solid var(--bd);background:var(--b3);color:var(--t2);font-size:10px;cursor:pointer;margin-left:2px" onclick="mvEx('+i+','+j+',1)">↓</button>';
 h+='</div>'});
-h+='<div class="sb">종목 추가</div><div class="ar"><input id="exSrch" placeholder="🔍 운동 검색 (예: 벤치, 스쿼트)" oninput="exFilter('+i+')" style="flex:1"></div>';
-h+='<div id="exDbList" style="max-height:200px;overflow-y:auto;margin:4px 0"></div>';
-h+='<div class="ar" style="margin-top:4px"><input id="exN" placeholder="직접 입력" style="flex:2"><button onclick="addEx('+i+')">추가</button></div>';
+h+='<div class="sb">종목 추가</div>';
+var exParts=["⭐","가슴","등","어깨","이두","삼두","하체","복근","유산소"];
+h+='<div style="display:flex;flex-wrap:wrap;gap:3px;margin:4px 0">';
+exParts.forEach(function(p){h+='<span class="ebtn exPt" data-pt="'+p+'" onclick="exSetPt(\''+p+'\','+i+')" style="padding:3px 7px;font-size:10px;cursor:pointer">'+p+'</span>'});
+h+='</div>';
+h+='<div class="ar" style="margin:3px 0"><input id="exSrch" placeholder="🔍 운동 검색" oninput="exFL('+i+')" style="flex:1"></div>';
+h+='<div id="exDbList" style="max-height:250px;overflow-y:auto;margin:4px 0"></div>';
+h+='<div class="ar" style="margin:4px 0"><input id="exN" placeholder="직접 입력 (DB에도 저장)" style="flex:2"><button onclick="addExMan('+i+')">추가</button></div>';
 $('mB').innerHTML=h;$('mBg').className='mbg on'}
+var exPtSel='';
 var EX_DB=[
-["가슴","바벨 벤치프레스","barbell+bench+press"],["가슴","덤벨 벤치프레스","dumbbell+bench+press"],
+["가슴","바벨 벤치프레스","barbell+bench+press+form"],["가슴","덤벨 벤치프레스","dumbbell+bench+press"],
 ["가슴","인클라인 벤치프레스","incline+bench+press"],["가슴","디클라인 벤치프레스","decline+bench+press"],
-["가슴","스미스 벤치프레스","smith+machine+bench+press"],["가슴","스미스 인클라인 벤치프레스","smith+incline+bench"],
-["가슴","덤벨 플라이","dumbbell+fly"],["가슴","인클라인 덤벨 플라이","incline+dumbbell+fly"],
+["가슴","스미스 벤치프레스","smith+bench+press"],["가슴","스미스 인클라인 벤치","smith+incline+bench"],
+["가슴","덤벨 플라이","dumbbell+fly+chest"],["가슴","인클라인 덤벨 플라이","incline+dumbbell+fly"],
 ["가슴","케이블 크로스오버","cable+crossover"],["가슴","케이블 플라이","cable+fly"],
-["가슴","펙덱 플라이","pec+deck+fly"],["가슴","딥스","chest+dips"],["가슴","푸쉬업","push+up+form"],
-["등","바벨 로우","barbell+row"],["등","덤벨 로우","dumbbell+row"],["등","원암 덤벨 로우","one+arm+dumbbell+row"],
-["등","티바 로우","t+bar+row"],["등","시티드 케이블 로우","seated+cable+row"],
-["등","랫풀다운","lat+pulldown"],["등","풀업","pull+up+tutorial"],["등","친업","chin+up"],
-["등","케이블 로우","cable+row"],["등","페이스풀","face+pull"],["등","데드리프트","deadlift+form"],
-["등","루마니안 데드리프트","romanian+deadlift"],["등","하이퍼익스텐션","hyperextension"],
+["가슴","펙덱 플라이","pec+deck+fly"],["가슴","체스트 딥스","chest+dips"],["가슴","푸쉬업","push+up+form"],
+["가슴","머신 체스트프레스","machine+chest+press"],["가슴","랜드마인 프레스","landmine+press"],
+["등","바벨 로우","barbell+row+form"],["등","덤벨 로우","dumbbell+row"],["등","원암 덤벨 로우","one+arm+row"],
+["등","티바 로우","t+bar+row"],["등","시티드 케이블 로우","seated+cable+row"],["등","원암 케이블 로우","one+arm+cable+row"],
+["등","랫풀다운","lat+pulldown+form"],["등","와이드 랫풀다운","wide+grip+pulldown"],["등","클로즈그립 랫풀다운","close+grip+pulldown"],
+["등","풀업","pull+up+form"],["등","친업","chin+up+form"],["등","페이스풀","face+pull+form"],
+["등","데드리프트","deadlift+form"],["등","루마니안 데드리프트","romanian+deadlift"],
+["등","하이퍼익스텐션","hyperextension"],["등","펜들레이 로우","pendlay+row"],["등","머신 로우","machine+row"],
+["등","스트레이트암 풀다운","straight+arm+pulldown"],
 ["어깨","덤벨 숄더프레스","dumbbell+shoulder+press"],["어깨","바벨 오버헤드프레스","overhead+press"],
-["어깨","아놀드 프레스","arnold+press"],["어깨","레터럴 레이즈","lateral+raise"],
-["어깨","케이블 레터럴 레이즈","cable+lateral+raise"],["어깨","프론트 레이즈","front+raise"],
-["어깨","리어델트 플라이","rear+delt+fly"],["어깨","업라이트 로우","upright+row"],
-["어깨","슈러그","barbell+shrug"],
-["이두","바벨 컬","barbell+curl"],["이두","덤벨 컬","dumbbell+curl"],["이두","해머 컬","hammer+curl"],
+["어깨","아놀드 프레스","arnold+press"],["어깨","머신 숄더프레스","machine+shoulder+press"],
+["어깨","레터럴 레이즈","lateral+raise+form"],["어깨","케이블 레터럴 레이즈","cable+lateral+raise"],
+["어깨","프론트 레이즈","front+raise"],["어깨","리어델트 플라이","rear+delt+fly"],
+["어깨","리버스 펙덱","reverse+pec+deck"],["어깨","업라이트 로우","upright+row"],
+["어깨","슈러그","barbell+shrug"],["어깨","루 레이즈","lu+raise"],
+["이두","바벨 컬","barbell+curl+form"],["이두","덤벨 컬","dumbbell+curl"],["이두","해머 컬","hammer+curl"],
 ["이두","인클라인 덤벨 컬","incline+dumbbell+curl"],["이두","컨센트레이션 컬","concentration+curl"],
 ["이두","프리처 컬","preacher+curl"],["이두","케이블 컬","cable+curl"],["이두","이지바 컬","ez+bar+curl"],
-["삼두","케이블 푸시다운","cable+pushdown+triceps"],["삼두","오버헤드 삼두 익스텐션","overhead+tricep+extension"],
+["이두","스파이더 컬","spider+curl"],["이두","21s 컬","21s+bicep+curl"],
+["삼두","케이블 푸시다운","cable+pushdown+tricep"],["삼두","로프 푸시다운","rope+pushdown"],
+["삼두","오버헤드 삼두 익스텐션","overhead+tricep+extension"],["삼두","덤벨 오버헤드 익스텐션","dumbbell+overhead+extension"],
 ["삼두","스컬크러셔","skull+crusher"],["삼두","딥스 (삼두)","tricep+dips"],
-["삼두","킥백","tricep+kickback"],["삼두","클로즈그립 벤치프레스","close+grip+bench+press"],
-["하체","바벨 스쿼트","barbell+squat"],["하체","스미스 스쿼트","smith+machine+squat"],
+["삼두","킥백","tricep+kickback"],["삼두","클로즈그립 벤치프레스","close+grip+bench"],
+["삼두","다이아몬드 푸쉬업","diamond+push+up"],
+["하체","바벨 스쿼트","barbell+squat+form"],["하체","스미스 스쿼트","smith+squat"],
 ["하체","프론트 스쿼트","front+squat"],["하체","고블릿 스쿼트","goblet+squat"],
 ["하체","불가리안 스플릿 스쿼트","bulgarian+split+squat"],["하체","레그 프레스","leg+press"],
 ["하체","레그 익스텐션","leg+extension"],["하체","레그 컬","leg+curl"],
-["하체","힙 쓰러스트","hip+thrust"],["하체","런지","walking+lunge"],
+["하체","힙 쓰러스트","hip+thrust"],["하체","런지","lunge+form"],["하체","워킹 런지","walking+lunge"],
 ["하체","카프 레이즈","calf+raise"],["하체","시티드 카프 레이즈","seated+calf+raise"],
 ["하체","핵 스쿼트","hack+squat"],["하체","스텝업","step+up+exercise"],
+["하체","수모 데드리프트","sumo+deadlift"],["하체","시시 스쿼트","sissy+squat"],["하체","굿모닝","good+morning+exercise"],
 ["복근","크런치","crunch+abs"],["복근","시티드 니업","seated+knee+up"],
 ["복근","레그레이즈","leg+raise+abs"],["복근","바이시클 크런치","bicycle+crunch"],
-["복근","플랭크","plank+form"],["복근","오블리크 크런치","oblique+crunch"],
-["복근","행잉 레그레이즈","hanging+leg+raise"],["복근","에비 롤아웃","ab+rollout"],
+["복근","플랭크","plank+form"],["복근","사이드 플랭크","side+plank"],
+["복근","오블리크 크런치","oblique+crunch"],["복근","행잉 레그레이즈","hanging+leg+raise"],
+["복근","에비 롤아웃","ab+rollout"],["복근","마운틴 클라이머","mountain+climber"],
+["복근","러시안 트위스트","russian+twist"],["복근","데드버그","dead+bug"],
+["복근","V업","v+up+abs"],["복근","힐터치","heel+touch+abs"],["복근","토투바","toe+touch+abs"],
+["복근","니투엘보","knee+to+elbow"],["복근","싯업","sit+up+form"],["복근","리버스 크런치","reverse+crunch"],
+["복근","케이블 크런치","cable+crunch"],["복근","행잉 니레이즈","hanging+knee+raise"],
+["복근","드래곤플래그","dragon+flag"],["복근","팔로프 프레스","pallof+press"],
+["가슴","인클라인 머신프레스","incline+machine+press"],["가슴","디클라인 덤벨프레스","decline+dumbbell+press"],
+["가슴","디클라인 덤벨 플라이","decline+dumbbell+fly"],["가슴","로우 케이블 플라이","low+cable+fly"],
+["가슴","하이 케이블 플라이","high+cable+fly"],["가슴","스벤드프레스","svend+press"],
+["가슴","와이드 푸쉬업","wide+push+up"],["가슴","인클라인 푸쉬업","incline+push+up"],
+["가슴","디클라인 푸쉬업","decline+push+up"],["가슴","플로어 프레스","floor+press"],
+["가슴","케틀벨 플로어프레스","kettlebell+floor+press"],["가슴","팩 마이너 딥스","pec+minor+dips"],
+["등","리버스그립 랫풀다운","reverse+grip+pulldown"],["등","싱글암 랫풀다운","single+arm+pulldown"],
+["등","시티드 하이로우","seated+high+row"],["등","머신 하이로우","machine+high+row"],
+["등","아처 로우","archer+row"],["등","랙풀","rack+pull"],["등","트랩바 데드리프트","trap+bar+deadlift"],
+["등","게즈라 로우","meadows+row"],["등","풀오버","pullover+exercise"],
+["등","덤벨 풀오버","dumbbell+pullover"],["등","케이블 풀오버","cable+pullover"],
+["등","인버티드 로우","inverted+row"],["등","밴드 풀아파트","band+pull+apart"],
+["등","스내치그립 데드리프트","snatch+grip+deadlift"],
+["어깨","덤벨 슈러그","dumbbell+shrug"],["어깨","케이블 프론트레이즈","cable+front+raise"],
+["어깨","원암 케이블 레터럴","one+arm+cable+lateral"],["어깨","밴드 풀아파트","band+pull+apart+shoulder"],
+["어깨","W레이즈","w+raise+shoulder"],["어깨","Y레이즈","y+raise+shoulder"],
+["어깨","스캐러크로우","scarecrow+exercise"],["어깨","리어델트 로우","rear+delt+row"],
+["어깨","페이스풀 (어깨)","face+pull+shoulder"],["어깨","사이드 라잉 레터럴","side+lying+lateral+raise"],
+["어깨","케이블 리어델트","cable+rear+delt"],["어깨","원판 프론트레이즈","plate+front+raise"],
+["이두","케이블 해머컬","cable+hammer+curl"],["이두","밴드 컬","resistance+band+curl"],
+["이두","크로스바디 해머컬","crossbody+hammer+curl"],["이두","드래그 컬","drag+curl"],
+["이두","리버스 컬","reverse+curl"],["이두","케틀벨 컬","kettlebell+curl"],
+["이두","머신 컬","machine+bicep+curl"],["이두","원암 프리처 컬","one+arm+preacher+curl"],
+["삼두","바닥 딥스","bench+dips"],["삼두","케이블 오버헤드 익스텐션","cable+overhead+extension"],
+["삼두","JM프레스","jm+press"],["삼두","리버스그립 푸시다운","reverse+grip+pushdown"],
+["삼두","바벨 오버헤드 익스텐션","barbell+overhead+extension"],["삼두","원암 케이블 푸시다운","one+arm+pushdown"],
+["삼두","덤벨 킥백","dumbbell+kickback"],["삼두","트라이셉 머신","tricep+machine"],
+["하체","덤벨 런지","dumbbell+lunge"],["하체","리버스 런지","reverse+lunge"],
+["하체","사이드 런지","side+lunge"],["하체","점프 스쿼트","jump+squat"],
+["하체","박스 스쿼트","box+squat"],["하체","핀 스쿼트","pin+squat"],
+["하체","벨트 스쿼트","belt+squat"],["하체","제퍼슨 스쿼트","jefferson+squat"],
+["하체","싱글레그 레그프레스","single+leg+press"],["하체","싱글레그 데드리프트","single+leg+deadlift"],
+["하체","싱글레그 레그컬","single+leg+curl"],["하체","레그프레스 카프레이즈","leg+press+calf"],
+["하체","바벨 힙쓰러스트","barbell+hip+thrust"],["하체","글루트 브릿지","glute+bridge"],
+["하체","케이블 킥백","cable+kickback+glute"],["하체","어덕터","adductor+machine"],
+["하체","어브덕터","abductor+machine"],["하체","덩키 킥","donkey+kick"],
+["하체","클램쉘","clamshell+exercise"],["하체","노르딕 햄 컬","nordic+ham+curl"],
 ["유산소","러닝","running+form"],["유산소","사이클","indoor+cycling"],
-["유산소","로잉머신","rowing+machine"],["유산소","점프로프","jump+rope+workout"]
+["유산소","로잉머신","rowing+machine"],["유산소","점프로프","jump+rope"],
+["유산소","버피","burpee+form"],["유산소","스텝밀","stairmaster"],
+["유산소","타바타","tabata+workout"],["유산소","일립티컬","elliptical+workout"],
+["유산소","배틀로프","battle+rope"],["유산소","복싱","boxing+workout"],
+["유산소","하이니","high+knee"],["유산소","크로스핏","crossfit+workout"]
 ];
-function exFilter(di){var q=$('exSrch').value.trim().toLowerCase();var el=$('exDbList');if(!el)return;
-if(!q){el.innerHTML='';return}
-var h='';EX_DB.forEach(function(e){if(e[1].toLowerCase().indexOf(q)===-1&&e[0].indexOf(q)===-1)return;
-h+='<div style="display:flex;align-items:center;gap:4px;padding:5px;border-bottom:1px solid var(--bd);font-size:11px">';
-h+='<span style="background:var(--gl);color:var(--a2);padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600;min-width:28px;text-align:center">'+e[0]+'</span>';
-h+='<span style="flex:1;font-weight:600">'+e[1]+'</span>';
-h+='<a href="https://www.youtube.com/results?search_query='+e[2]+'+운동+방법" target="_blank" style="font-size:9px;color:var(--rd);text-decoration:none;padding:2px 5px;background:rgba(255,0,0,.1);border-radius:3px">▶ YT</a>';
-h+='<span style="color:var(--ac);cursor:pointer;padding:2px 6px;background:var(--gl);border-radius:3px;font-size:10px;font-weight:700" onclick="addExFromDb('+di+',\''+e[1].replace(/'/g,"\\'")+'\')">+</span>';
-h+='</div>'});
-if(!h)h='<div style="font-size:11px;color:var(--t3);padding:6px">검색 결과 없음</div>';
-el.innerHTML=h}
-function addExFromDb(di,name){var d=gD();d.wo[di].exercises.push({n:name,s:'3',reps:'10',r:'1',d:'',cal:0,wt:0,wu:'kg'});sv(d);editWoD(di);R()}
+var exFav=[];function loadExFav(){try{exFav=JSON.parse(localStorage.getItem('exFav')||'[]')}catch(e){exFav=[]}}
+function svExFav(){try{localStorage.setItem('exFav',JSON.stringify(exFav))}catch(e){}}
+function exSetPt(pt,di){exPtSel=exPtSel===pt?'':pt;exFL(di);document.querySelectorAll('.exPt').forEach(function(el){el.style.background=el.dataset.pt===exPtSel?'var(--ac)':'';el.style.color=el.dataset.pt===exPtSel?'#fff':''})}
+function exFL(di){loadExFav();var q=document.getElementById('exSrch');var qv=q?q.value.trim():'';var el=document.getElementById('exDbList');if(!el)return;
+var d=gD();var custom=d.pr.customExs||[];var all=EX_DB.concat(custom);var list=all;
+if(exPtSel==='⭐')list=all.filter(function(e){return exFav.indexOf(e[1])!==-1});
+else if(exPtSel)list=all.filter(function(e){return e[0]===exPtSel});
+if(qv)list=list.filter(function(e){return e[1].indexOf(qv)!==-1||e[0].indexOf(qv)!==-1});
+var h2='';list.forEach(function(e){var esc=e[1].replace(/'/g,"\\'");var isFav=exFav.indexOf(e[1])!==-1;
+h2+='<div style="display:flex;align-items:center;gap:4px;padding:7px 4px;border-bottom:1px solid var(--bd);font-size:11px;cursor:pointer;background:var(--b3);border-radius:4px;margin:2px 0" onclick="addExDb('+di+',\''+esc+'\')">';
+h2+='<span style="font-size:12px" onclick="event.stopPropagation();exTF(\''+esc+'\','+di+')">'+(isFav?'⭐':'☆')+'</span>';
+h2+='<span style="background:var(--gl);color:var(--a2);padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600;min-width:28px;text-align:center">'+e[0]+'</span>';
+h2+='<span style="flex:1;font-weight:600">'+e[1]+'</span>';
+h2+='<a href="https://www.youtube.com/results?search_query='+e[2]+'+운동+자세&sp=CAMSAhAB" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--rd);text-decoration:none;padding:2px 6px;background:rgba(255,0,0,.1);border-radius:3px">▶YT</a>';
+h2+='</div>'});
+if(!h2){if(exPtSel||qv)h2='<div style="font-size:11px;color:var(--t3);padding:8px;text-align:center">검색 결과 없음</div>';
+else h2='<div style="font-size:11px;color:var(--t3);padding:8px;text-align:center">부위를 선택하거나 검색하세요</div>'}
+el.innerHTML=h2}
+function exTF(nm,di){loadExFav();var i=exFav.indexOf(nm);if(i>=0)exFav.splice(i,1);else exFav.push(nm);svExFav();exFL(di)}
+function addExDb(di,nm){var d=gD();d.wo[di].exercises.push({n:nm,s:'3',reps:'10',r:'1',d:'',cal:0,wt:0,wu:'kg'});sv(d);editWoD(di);R()}
+function addExMan(di){var n=document.getElementById('exN').value.trim();if(!n)return;var d=gD();d.wo[di].exercises.push({n:n,s:'3',reps:'10',r:'1',d:'',cal:0,wt:0,wu:'kg'});if(!d.pr.customExs)d.pr.customExs=[];d.pr.customExs.push(["기타",n,n.replace(/ /g,'+')]);sv(d);editWoD(di);R()}
 function svWoN(i){var d=gD();d.wo[i].name=$('woN').value||d.wo[i].name;
 var days=[];document.querySelectorAll('.ewdD').forEach(function(cb){if(cb.checked)days.push(parseInt(cb.value))});
 d.wo[i].days=days;syncWoMission(d);sv(d);cM();R()}
@@ -598,7 +668,7 @@ h+='<label><span>칼로리</span><input id="edCal" type="number" inputmode="nume
 h+='</div><div style="margin:8px 0"><button onclick="svEdEx('+di+','+ei+')" style="width:100%;background:var(--ac);color:#fff;border:0;border-radius:var(--s);padding:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">저장</button></div>';
 $('mB').innerHTML=h;$('mBg').className='mbg on'}
 function svEdEx(di,ei){var d=gD(),x=d.wo[di].exercises[ei];x.n=$('edN').value||x.n;x.s=$('edS').value;x.reps=$('edR').value;x.wt=parseFloat($('edWt').value)||0;x.wu=$('edWu').value||'kg';x.r=$('edRs').value;x.d=$('edD').value;x.cal=parseInt($('edCal').value)||0;sv(d);editWoD(di);R()}
-function addEx(di){var n=$('exN').value.trim();if(!n)return;var d=gD();d.wo[di].exercises.push({n:n,s:'3',reps:'10',r:'1',d:'',cal:0,wt:0,wu:'kg'});sv(d);editWoD(di);R()}
+
 function tDi(id){var d=gD(),k=dk(gDay());if(!d.dl[k])d.dl[k]={};d.dl[k][id]=!d.dl[k][id];sv(d);R()}
 
 // ===== 넘버피커 =====
@@ -682,6 +752,10 @@ function fmtTime(s){var m=Math.floor(s/60),ss=s%60;return(m<10?'0':'')+m+':'+(ss
 function wkBeep(sec){try{if(!gAC)return;if(gAC.state==='suspended')gAC.resume();var o=gAC.createOscillator();var g=gAC.createGain();o.connect(g);g.connect(gAC.destination);
 if(sec===0){o.type='triangle';o.frequency.value=660;g.gain.value=0.2;o.start();g.gain.setValueAtTime(0.2,gAC.currentTime);g.gain.linearRampToValueAtTime(0,gAC.currentTime+0.8);o.stop(gAC.currentTime+0.8)}
 else{o.type='triangle';o.frequency.value=440;g.gain.value=0.15;o.start();g.gain.setValueAtTime(0.15,gAC.currentTime);g.gain.linearRampToValueAtTime(0,gAC.currentTime+0.3);o.stop(gAC.currentTime+0.3)}}catch(e){}}
+// 운동 칼로리 자동 계산 (MET 기반 추정)
+function wkCalcEx(x,sets){if(!sets||!sets.length)return 0;
+var total=0;sets.forEach(function(s){var w=s.wt||0;var r=s.reps||0;
+total+=Math.round(w*r*0.05+r*1.5)});return total}
 function wkRender(){
 var h='<div class="wk-mode">';
 // 상단
@@ -695,7 +769,8 @@ var sets=wkSt.setData[xi]||[];var allDn=sets.length>0;for(var si=0;si<sets.lengt
 h+='<div style="background:var(--b2);border:1px solid '+(allDn?'var(--gn)':'var(--bd)')+';border-radius:10px;padding:10px;margin:0 0 6px'+(allDn?';opacity:.6':'')+'">';
 // 종목 헤더
 h+='<div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 6px">';
-h+='<div style="font-size:14px;font-weight:800">'+(allDn?'✅ ':'')+x.n+(x.r?' <span style="font-size:12px;font-weight:700;color:var(--am);margin-left:4px">⏱ '+x.r+'분</span>':'')+'</div>';
+var exCal=wkCalcEx(x,sets);
+h+='<div style="font-size:14px;font-weight:800">'+(allDn?'✅ ':'')+x.n+' <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(x.n+' 운동 자세')+'&sp=CAMSAhAB" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--rd);text-decoration:none;vertical-align:middle">▶YT</a>'+(x.r?' <span style="font-size:11px;font-weight:700;color:var(--am)">⏱'+x.r+'분</span>':'')+(exCal?' <span style="font-size:9px;color:var(--t3)">~'+exCal+'kcal</span>':'')+'</div>';
 h+='<div style="display:flex;gap:3px">';
 if(xi>0)h+='<span style="font-size:12px;color:var(--a2);cursor:pointer;padding:4px 8px;background:var(--gl);border-radius:5px;border:1px solid rgba(124,106,255,.2)" onclick="wkMvEx('+xi+',-1)">↑</span>';
 if(xi<wkSt.exList.length-1)h+='<span style="font-size:12px;color:var(--a2);cursor:pointer;padding:4px 8px;background:var(--gl);border-radius:5px;border:1px solid rgba(124,106,255,.2)" onclick="wkMvEx('+xi+',1)">↓</span>';
@@ -790,6 +865,35 @@ function delRoutine(i){var d=gD();if(!confirm('"'+d.woHist[i].name+'" 삭제?'))
 function expRoutine(i){var d=gD(),wh=d.woHist[i];var out={name:wh.name,wo:wh.wo,exported:dk(now)};var b=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='routine_'+wh.name.replace(/\s/g,'_')+'_'+dk(now)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);alert('내보내기 완료!')}
 
 // ===== 식단 (수정8: 편집 가능) =====
+// ===== 칼로리 DB (전역) =====
+var CAL_DB=[
+["🍚","흰밥","1공기",300],["🍚","햇반","210g",310],["🍚","현미밥","1공기",330],["🍚","잡곡밥","1공기",320],
+["🍗","닭가슴살","100g",109],["🍗","닭다리","1개",180],["🍗","치킨","1조각",150],["🍗","닭볶음탕","1인분",350],["🍗","닭갈비","1인분",300],["🍗","양념치킨","1조각",180],
+["🥩","소등심","100g",250],["🥩","삼겹살","100g",330],["🥩","목살","100g",220],["🥩","불고기","1인분",250],["🥩","소갈비","100g",300],["🥩","안심","100g",180],["🥩","한우","100g",280],
+["🐟","연어","100g",200],["🐟","참치회","100g",130],["🐟","고등어","1토막",200],["🐟","새우","100g",85],["🐟","오징어","1마리",120],["🐟","참치캔","1캔",150],["🐟","광어회","100g",100],["🐟","전복","1개",40],["🐟","갈치","1토막",160],["🐟","꽃게","1마리",60],
+["🍳","계란","1개",85],["🍳","계란후라이","1개",110],["🍳","스크램블","2개분",180],["🍳","계란찜","1인분",120],
+["🥛","우유","200ml",130],["🥛","두유","200ml",110],["🥤","프로틴","1스쿱",125],["🥤","요거트","100g",60],["🥤","그릭요거트","100g",95],
+["🍌","바나나","1개",100],["🍎","사과","1개",80],["🍊","귤","1개",40],["🍇","포도","1송이",90],["🍓","딸기","10개",50],["🥝","키위","1개",45],["🍑","복숭아","1개",60],["🍈","메론","1조각",50],["🫐","블루베리","100g",57],["🍒","체리","10개",50],
+["🍠","고구마","150g",190],["🥔","감자","1개",100],["🥒","오이","1개",15],["🥕","당근","1개",35],["🍅","토마토","1개",25],["🥑","아보카도","반개",120],["🌽","옥수수","1개",90],
+["🫘","두부","반모",115],["🥗","샐러드","1인분",100],["🥬","김치","1인분",15],["🥜","견과류","30g",180],["🧀","치즈","1장",60],["🍞","식빵","1장",80],["🥐","크로와상","1개",230],["🥯","베이글","1개",250],["🫓","또띠아","1장",120],
+["🍕","피자","1조각",285],["🍔","햄버거","1개",450],["🍟","감자튀김","M",340],["🌭","핫도그","1개",290],["🌯","브리또","1개",450],
+["🍜","라면","1봉",500],["🍜","짜장면","1인분",650],["🍜","짬뽕","1인분",450],["🍜","우동","1인분",400],["🍜","칼국수","1인분",400],["🍜","수제비","1인분",380],["🍜","쌀국수","1인분",350],["🍜","냉면","1인분",450],["🍜","잔치국수","1인분",400],["🍜","비빔면","1인분",400],["🍝","파스타","1인분",500],["🍝","까르보나라","1인분",550],
+["🍛","김치찌개","1인분",150],["🍛","된장찌개","1인분",120],["🍛","순두부찌개","1인분",130],["🍛","부대찌개","1인분",350],["🍛","감자탕","1인분",400],["🍛","청국장","1인분",140],["🍛","매운탕","1인분",200],
+["🍛","제육볶음","1인분",300],["🍛","불백","1인분",350],["🍛","오삼불고기","1인분",280],["🍛","두루치기","1인분",300],["🍛","갈비찜","1인분",400],["🍛","찜닭","1인분",400],["🍛","닭도리탕","1인분",350],["🍛","낙지볶음","1인분",250],
+["🍛","비빔밥","1인분",550],["🍛","볶음밥","1인분",500],["🍛","카레","1인분",450],["🍛","국밥","1인분",400],["🍛","설렁탕","1인분",400],["🍛","곰탕","1인분",350],["🍛","삼계탕","1인분",900],["🍛","육개장","1인분",300],["🍛","미역국","1인분",100],["🍛","콩나물국","1인분",50],
+["🍛","잡채","1인분",250],["🍛","떡볶이","1인분",400],["🍛","순대","1인분",250],["🍛","라볶이","1인분",550],["🍛","튀김","1인분",300],
+["🍛","제육덮밥","1인분",550],["🍛","오징어덮밥","1인분",500],["🍛","김치덮밥","1인분",480],["🍛","카레덮밥","1인분",550],["🍛","불고기덮밥","1인분",530],["🍛","마파두부덮밥","1인분",520],["🍛","참치덮밥","1인분",450],["🍛","치킨덮밥","1인분",580],["🍛","소불고기덮밥","1인분",560],
+["🥟","만두","5개",250],["🥟","군만두","5개",300],["🍖","족발","100g",230],["🍖","보쌈","100g",200],["🥪","샌드위치","1개",350],["🌯","김밥","1줄",350],["🍣","초밥","1개",45],["🍱","도시락","1개",600],["🥞","전","1장",150],["🧆","동그랑땡","3개",150],["🍖","곱창","100g",200],["🍖","대창","100g",300],
+["🍰","케이크","1조각",350],["🍩","도넛","1개",250],["🍦","아이스크림","1개",200],["🍫","초콜릿바","1개",250],["🍪","쿠키","1개",80],["🍡","떡","1개",120],["🥧","호떡","1개",250],["🧁","머핀","1개",300],["🍿","팝콘","1봉",400],["🧇","와플","1개",280],["🍢","어묵","1꼬치",60],
+["☕","아메리카노","1잔",5],["☕","카페라떼","1잔",180],["☕","카푸치노","1잔",120],["☕","바닐라라떼","1잔",250],["☕","카라멜마키아또","1잔",280],
+["🧋","버블티","1잔",400],["🥤","콜라","355ml",140],["🥤","사이다","355ml",140],["🥤","오렌지주스","200ml",90],["🧃","이온음료","500ml",125],["🥤","에너지드링크","250ml",115],
+["🍺","맥주","500ml",200],["🍶","소주","1잔",65],["🍷","와인","1잔",120],["🥃","위스키","1잔",70],["🍸","칵테일","1잔",200]
+];
+var calQty={},calFav=[];
+function loadCalFav(){try{calFav=JSON.parse(localStorage.getItem('calFav')||'[]')}catch(e){calFav=[]}}
+function svCalFav(){try{localStorage.setItem('calFav',JSON.stringify(calFav))}catch(e){}}
+function getCalAll(){var d=gD();var custom=d.pr.customFoods||[];return CAL_DB.concat(custom)}
+
 function rDi(){var d=gD(),day=gDay(),k=dk(day);if(!d.dl[k])d.dl[k]={};var c=cCal(day);
 var h='<div style="display:flex;justify-content:space-between;align-items:center"><div class="sl">식단</div><button class="ebtn" onclick="editTrainDays()">훈련일편집</button></div>';
 h+='<div style="padding:6px;border-radius:var(--s);font-size:12px;font-weight:700;text-align:center;background:'+(c.isTraining?'var(--gl)':'var(--b3)')+';color:'+(c.isTraining?'var(--a2)':'var(--t3)')+';border:1px solid '+(c.isTraining?'var(--ac)':'var(--bd)')+';margin:3px 0">'+(c.isTraining?'🏋️ 훈련일':'😴 휴식일')+'</div>';
@@ -807,72 +911,43 @@ fdW.forEach(function(m){var mi=d.wk.indexOf(m);if(!d.wl[wk2][m.id])d.wl[wk2][m.i
 h+='<div class="wm"><div class="wm-top"><div class="wm-name" onclick="edWk('+mi+')">'+m.lb+'</div><div class="wm-cnt" style="color:'+(cn>=m.tg?'var(--gn)':'var(--t2)')+'">'+cn+'/'+m.tg+'</div></div>';
 h+='<div class="wm-checks">';for(var j=0;j<m.tg;j++){h+='<div class="wm-dot'+(j<cn?' fl':'')+'" onclick="tW('+mi+','+j+')">'+(j<cn?'✓':(j+1))+'</div>'}
 h+='</div></div>'});h+='</div>'}
-// 칼로리 계산기
-var CAL_DB=[
-["🍚","흰밥","1공기",300],["🍚","햇반","210g",310],["🍚","현미밥","1공기",330],["🍚","잡곡밥","1공기",320],
-["🍗","닭가슴살","100g",109],["🍗","닭다리","1개",180],["🍗","치킨","1조각",150],["🍗","닭볶음탕","1인분",350],["🍗","닭갈비","1인분",300],
-["🥩","소등심","100g",250],["🥩","삼겹살","100g",330],["🥩","목살","100g",220],["🥩","불고기","1인분",250],["🥩","소갈비","100g",300],["🥩","안심","100g",180],
-["🐟","연어","100g",200],["🐟","참치회","100g",130],["🐟","고등어","1토막",200],["🐟","새우","100g",85],["🐟","오징어","1마리",120],["🐟","참치캔","1캔",150],["🐟","광어회","100g",100],["🐟","전복","1개",40],
-["🍳","계란","1개",85],["🍳","계란후라이","1개",110],["🍳","스크램블","2개분",180],["🍳","계란찜","1인분",120],
-["🥛","우유","200ml",130],["🥛","두유","200ml",110],["🥤","프로틴","1스쿱",125],["🥤","요거트","100g",60],["🥤","그릭요거트","100g",95],
-["🍌","바나나","1개",100],["🍎","사과","1개",80],["🍊","귤","1개",40],["🍇","포도","1송이",90],["🍓","딸기","10개",50],["🥝","키위","1개",45],["🍑","복숭아","1개",60],["🍈","메론","1조각",50],
-["🍠","고구마","150g",190],["🥔","감자","1개",100],["🥒","오이","1개",15],["🥕","당근","1개",35],["🍅","토마토","1개",25],["🥑","아보카도","반개",120],
-["🫘","두부","반모",115],["🥗","샐러드","1인분",100],["🥬","김치","1인분",15],["🥜","견과류","30g",180],["🧀","치즈","1장",60],["🍞","식빵","1장",80],["🥐","크로와상","1개",230],["🥯","베이글","1개",250],
-["🍕","피자","1조각",285],["🍔","햄버거","1개",450],["🍟","감자튀김","M",340],["🌭","핫도그","1개",290],
-["🍜","라면","1봉",500],["🍜","짜장면","1인분",650],["🍜","짬뽕","1인분",450],["🍜","우동","1인분",400],["🍜","칼국수","1인분",400],["🍜","수제비","1인분",380],["🍜","쌀국수","1인분",350],["🍜","냉면","1인분",450],["🍜","잔치국수","1인분",400],["🍝","파스타","1인분",500],
-["🍛","김치찌개","1인분",150],["🍛","된장찌개","1인분",120],["🍛","순두부찌개","1인분",130],["🍛","부대찌개","1인분",350],["🍛","감자탕","1인분",400],
-["🍛","제육볶음","1인분",300],["🍛","불백","1인분",350],["🍛","오삼불고기","1인분",280],["🍛","두루치기","1인분",300],["🍛","갈비찜","1인분",400],["🍛","찜닭","1인분",400],
-["🍛","비빔밥","1인분",550],["🍛","볶음밥","1인분",500],["🍛","카레","1인분",450],["🍛","국밥","1인분",400],["🍛","설렁탕","1인분",400],["🍛","곰탕","1인분",350],["🍛","삼계탕","1인분",900],
-["🍛","잡채","1인분",250],["🍛","떡볶이","1인분",400],["🍛","순대","1인분",250],
-["🍛","제육덮밥","1인분",550],["🍛","오징어덮밥","1인분",500],["🍛","김치덮밥","1인분",480],["🍛","카레덮밥","1인분",550],["🍛","불고기덮밥","1인분",530],["🍛","마파두부덮밥","1인분",520],["🍛","참치덮밥","1인분",450],["🍛","치킨덮밥","1인분",580],
-["🥟","만두","5개",250],["🍖","족발","100g",230],["🍖","보쌈","100g",200],["🥪","샌드위치","1개",350],["🌯","김밥","1줄",350],["🍣","초밥","1개",45],["🍱","도시락","1개",600],["🥞","전","1장",150],["🧆","동그랑땡","3개",150],
-["🍰","케이크","1조각",350],["🍩","도넛","1개",250],["🍦","아이스크림","1개",200],["🍫","초콜릿바","1개",250],["🍪","쿠키","1개",80],["🍡","떡","1개",120],["🥧","호떡","1개",250],["🧁","머핀","1개",300],["🍿","팝콘","1봉",400],
-["☕","아메리카노","1잔",5],["☕","카페라떼","1잔",180],["☕","카푸치노","1잔",120],["🧋","버블티","1잔",400],
-["🥤","콜라","355ml",140],["🥤","사이다","355ml",140],["🥤","오렌지주스","200ml",90],["🧃","이온음료","500ml",125],
-["🍺","맥주","500ml",200],["🍶","소주","1잔",65],["🍷","와인","1잔",120],["🥃","위스키","1잔",70]
-];
-var calQty={},calFav=[];
-function loadCalFav(){try{calFav=JSON.parse(localStorage.getItem('calFav')||'[]')}catch(e){calFav=[]}}
-function svCalFav(){try{localStorage.setItem('calFav',JSON.stringify(calFav))}catch(e){}}
-function getCalList(){loadCalFav();var d=gD();var custom=d.pr.customFoods||[];var all=CAL_DB.concat(custom);
-var favs=all.filter(function(r){return calFav.indexOf(r[1])!==-1});
-var rest=all.filter(function(r){return calFav.indexOf(r[1])===-1});
-return favs.concat(rest)}
+// 칼로리 계산기 HTML (데이터와 함수는 rDi 밖 전역에 정의)
 h+='<div class="sl" style="margin-top:10px">🔢 칼로리 계산기</div>';
 h+='<div class="cd"><div id="calTotal" style="font-size:16px;font-weight:800;color:var(--a2);margin:0 0 4px">합계: 0 kcal</div>';
 h+='<div id="calItems" style="font-size:9px;color:var(--t2);margin:0 0 6px;word-break:break-all"></div>';
 h+='<div class="bbtn" style="margin:4px 0"><button class="ebtn" style="flex:1;padding:7px;font-size:10px" onclick="calAddMeal(\'아침\')">🌅아침</button><button class="ebtn" style="flex:1;padding:7px;font-size:10px" onclick="calAddMeal(\'점심\')">☀️점심</button><button class="ebtn" style="flex:1;padding:7px;font-size:10px" onclick="calAddMeal(\'저녁\')">🌙저녁</button><button class="ebtn" style="flex:1;padding:7px;font-size:10px" onclick="calAddMeal(\'간식\')">🍪간식</button></div></div>';
-h+='<div class="ar" style="margin:4px 0"><input id="calSrch" placeholder="🔍 음식 검색" oninput="calFilter()" style="flex:1"></div>';
-h+='<div style="display:flex;gap:3px;margin:0 0 4px"><button class="ebtn" style="padding:5px 8px;font-size:10px" onclick="calCustom()">+ 직접 추가</button><button class="ebtn" style="padding:5px 8px;font-size:10px" onclick="calReset()">초기화</button></div>';
+h+='<div class="ar" style="margin:4px 0"><input id="calSrch" placeholder="🔍 음식 검색 (예: 덮밥, 닭)" oninput="calRL()" style="flex:1"></div>';
+h+='<div style="display:flex;gap:3px;margin:0 0 4px"><button class="ebtn" style="padding:5px 8px;font-size:10px" onclick="calCustom()">+ 직접 추가</button><button class="ebtn" style="padding:5px 8px;font-size:10px" onclick="calQty={};calRL()">초기화</button></div>';
 h+='<div class="cd" style="max-height:350px;overflow-y:auto;padding:6px" id="calList"></div>';
-h+='<div class="nt">대략적인 참고 수치. ⭐=즐겨찾기 토글, 숫자로 수량 조절</div>';
-$('s3').innerHTML=h;calRenderList()}
-function calRenderList(){var list=getCalList();var sq=$('calSrch');var q=sq?sq.value.trim().toLowerCase():'';
-var h='';list.forEach(function(r,ri){var name=r[1];if(q&&name.toLowerCase().indexOf(q)===-1)return;
-var isFav=calFav.indexOf(name)!==-1;var qty=calQty[name]||0;
-h+='<div style="display:flex;align-items:center;gap:4px;padding:5px 0;border-bottom:1px solid var(--bd);font-size:11px">';
-h+='<span style="cursor:pointer;font-size:14px" onclick="calTogFav(\''+name.replace(/'/g,"\\'")+'\');">'+(isFav?'⭐':'☆')+'</span>';
-h+='<span style="min-width:16px">'+r[0]+'</span>';
-h+='<span style="flex:1">'+name+'<span style="color:var(--t3);font-size:9px"> '+r[2]+'</span></span>';
-h+='<span style="color:var(--a2);font-weight:600;min-width:32px;text-align:right">'+r[3]+'</span>';
-h+='<div style="display:flex;align-items:center;gap:2px;margin-left:4px">';
-h+='<span style="width:22px;height:22px;border-radius:4px;background:var(--b3);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;color:var(--t2)" onclick="calAdj(\''+name.replace(/'/g,"\\'")+'\','+r[3]+',-1)">−</span>';
-h+='<span style="min-width:18px;text-align:center;font-weight:700;color:'+(qty?'var(--a2)':'var(--t3)')+'">'+qty+'</span>';
-h+='<span style="width:22px;height:22px;border-radius:4px;background:var(--b3);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;color:var(--t2)" onclick="calAdj(\''+name.replace(/'/g,"\\'")+'\','+r[3]+',1)">+</span>';
-h+='</div></div>'});
-var el=$('calList');if(el)el.innerHTML=h;calUpdateTotal()}
-function calAdj(name,cal,dir){calQty[name]=Math.max(0,(calQty[name]||0)+dir);calRenderList()}
-function calUpdateTotal(){var total=0,items=[];var list=getCalList();list.forEach(function(r){var q=calQty[r[1]]||0;if(q>0){total+=r[3]*q;items.push(r[1]+(q>1?'×'+q:'')+'('+r[3]*q+')')}});
-var te=$('calTotal');if(te)te.textContent='합계: '+total+' kcal';
-var ie=$('calItems');if(ie)ie.textContent=items.join(' + ')}
-function calTogFav(name){loadCalFav();var i=calFav.indexOf(name);if(i>=0)calFav.splice(i,1);else calFav.push(name);svCalFav();calRenderList()}
-function calFilter(){calRenderList()}
-function calReset(){calQty={};calRenderList()}
-function calCustom(){var name=prompt('음식 이름');if(!name)return;var cal=parseInt(prompt('칼로리(kcal)'));if(!cal)return;
-var d=gD();if(!d.pr.customFoods)d.pr.customFoods=[];d.pr.customFoods.push(["🍴",name,"1인분",cal]);sv(d);calRenderList()}
-function calAddMeal(meal){var total=0,names=[];var list=getCalList();list.forEach(function(r){var q=calQty[r[1]]||0;if(q>0){total+=r[3]*q;names.push(r[1]+(q>1?'×'+q:''))}});
+h+='<div class="nt">⭐=즐겨찾기, −/+로 수량 조절</div>';
+$('s3').innerHTML=h;calRL()}
+function calRL(){loadCalFav();var all=getCalAll();var sq=document.getElementById('calSrch');var q=sq?sq.value.trim():'';
+var favs=all.filter(function(r){return calFav.indexOf(r[1])!==-1});
+var rest=all.filter(function(r){return calFav.indexOf(r[1])===-1});
+var list=favs.concat(rest);
+var h2='';list.forEach(function(r){var nm=r[1];if(q&&nm.indexOf(q)===-1)return;
+var isFav=calFav.indexOf(nm)!==-1;var qty=calQty[nm]||0;var esc=nm.replace(/'/g,"\\'");
+h2+='<div style="display:flex;align-items:center;gap:4px;padding:6px 2px;border-bottom:1px solid var(--bd);font-size:11px">';
+h2+='<span style="cursor:pointer;font-size:13px" onclick="calTF(\''+esc+'\')">'+(isFav?'⭐':'☆')+'</span>';
+h2+='<span style="min-width:16px">'+r[0]+'</span>';
+h2+='<span style="flex:1">'+nm+'<span style="color:var(--t3);font-size:9px"> '+r[2]+'</span></span>';
+h2+='<span style="color:var(--a2);font-weight:600;min-width:30px;text-align:right;font-size:10px">'+r[3]+'</span>';
+h2+='<span style="width:24px;height:24px;border-radius:5px;background:var(--b3);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer" onclick="calA(\''+esc+'\',-1)">−</span>';
+h2+='<span style="min-width:18px;text-align:center;font-weight:700;font-size:12px;color:'+(qty?'var(--a2)':'var(--t3)')+'">'+qty+'</span>';
+h2+='<span style="width:24px;height:24px;border-radius:5px;background:'+(qty?'var(--ac)':'var(--b3)')+';border:1px solid '+(qty?'var(--ac)':'var(--bd)')+';display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;color:'+(qty?'#fff':'var(--t2)')+'" onclick="calA(\''+esc+'\',1)">+</span>';
+h2+='</div>'});
+if(!h2)h2='<div style="font-size:11px;color:var(--t3);padding:8px;text-align:center">검색 결과 없음</div>';
+var el=document.getElementById('calList');if(el)el.innerHTML=h2;calUT()}
+function calA(nm,dir){calQty[nm]=Math.max(0,(calQty[nm]||0)+dir);calRL()}
+function calUT(){var all=getCalAll();var total=0,items=[];all.forEach(function(r){var q=calQty[r[1]]||0;if(q>0){total+=r[3]*q;items.push(r[1]+(q>1?'×'+q:'')+'('+r[3]*q+')')}});
+var te=document.getElementById('calTotal');if(te)te.textContent='합계: '+total+' kcal';
+var ie=document.getElementById('calItems');if(ie)ie.textContent=items.join(' + ')}
+function calTF(nm){loadCalFav();var i=calFav.indexOf(nm);if(i>=0)calFav.splice(i,1);else calFav.push(nm);svCalFav();calRL()}
+function calCustom(){var nm=prompt('음식 이름');if(!nm)return;var cal=parseInt(prompt(nm+' 칼로리(kcal)'));if(!cal)return;
+var d=gD();if(!d.pr.customFoods)d.pr.customFoods=[];d.pr.customFoods.push(["🍴",nm,"1인분",cal]);sv(d);calRL()}
+function calAddMeal(meal){var all=getCalAll();var total=0,names=[];all.forEach(function(r){var q=calQty[r[1]]||0;if(q>0){total+=r[3]*q;names.push(r[1]+(q>1?'×'+q:''))}});
 if(!total){alert('음식 수량을 선택해주세요');return}
-var lb=meal+': '+names.join('+');var d=gD();d.dy.push({id:'d_'+Date.now(),lb:lb,cal:total,tp:'food'});sv(d);calQty={};calRenderList();alert(lb+' ('+total+'kcal) 추가!');R()}
+var lb=meal+': '+names.join('+');var d=gD();d.dy.push({id:'d_'+Date.now(),lb:lb,cal:total,tp:'food'});sv(d);calQty={};calRL();alert(lb+' ('+total+'kcal) 추가!');R()}
 function editTrainDays(){var d=gD();if(!d.pr.trainDays)d.pr.trainDays=[];
 var h='<h3>훈련일 설정 <span class="cls" onclick="cM()">닫기</span></h3><div class="nt" style="margin-bottom:6px">체크=훈련일, 미체크=휴식일</div>';
 DOW.forEach(function(d2,i){var chk=d.pr.trainDays.indexOf(i)!==-1;h+='<label style="display:flex;align-items:center;gap:7px;padding:7px;background:var(--b3);border-radius:var(--s);cursor:pointer;font-size:12px;margin:3px 0"><input type="checkbox" class="tdCb" value="'+i+'"'+(chk?' checked':'')+' style="width:17px;height:17px"><strong'+(i===5?' class="satc"':'')+(i===6?' class="sunc"':'')+'> '+d2+'</strong></label>'});
