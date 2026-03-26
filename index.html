@@ -156,6 +156,7 @@ button:active{transform:scale(0.96);opacity:0.85}
 <div class="hero"><h1 id="AT">God Life</h1></div>
 <div class="tg tg4" id="tg1"></div>
 <div class="tg tg4" id="tg2"></div>
+<div id="dateNav"></div>
 <div class="sch" id="schBar"></div>
 <div class="nav" id="nv"></div>
 <div id="ss"></div>
@@ -251,7 +252,9 @@ $('schBar').innerHTML=h}
 function rTop(){var d=gD(),p=d.pr,c=cCal(gDay());$('AT').textContent=(p.name?p.name+'의 ':'')+'갓생 일지';
 var gv=p.goalShow||'bf';var goalStr=gv==='bf'?(p.gbf?p.gbf+'%':'-'):gv==='ms'?(p.gms?p.gms+'kg':'-'):gv==='wt'?(p.gwt?p.gwt+'kg':'-'):'-';var goalLbl=gv==='bf'?'목표체지방':gv==='ms'?'목표근육량':'목표체중';
 $('tg1').innerHTML='<div class="ti" onclick="epQuick(\'wt\')" style="cursor:pointer"><div class="v">'+p.wt+'kg</div><div class="l">체중</div></div><div class="ti" onclick="epQuick(\'ms\')" style="cursor:pointer"><div class="v">'+(p.ms||'-')+'kg</div><div class="l">근육량</div></div><div class="ti" onclick="epQuick(\'bf\')" style="cursor:pointer"><div class="v">'+p.bf+'%</div><div class="l">체지방률</div></div><div class="ti" onclick="epGoal()" style="cursor:pointer"><div class="v" style="color:var(--a2)">'+goalStr+'</div><div class="l">'+goalLbl+'</div></div>';
-$('tg2').innerHTML='<div class="ti"><div class="v">'+c.goal+'</div><div class="l">'+(c.isTraining?'훈련':'휴식')+'kcal</div></div><div class="ti"><div class="v" style="color:var(--rd)">-'+c.ex+'</div><div class="l">운동소비</div></div><div class="ti"><div class="v" style="color:var(--gn)">+'+c.di+'</div><div class="l">식단섭취</div></div><div class="ti"><div class="v" style="color:'+(c.remain>=0?'var(--am)':'var(--rd)')+'">'+c.remain+'</div><div class="l">잔여kcal</div></div>';rSch()}
+$('tg2').innerHTML='<div class="ti"><div class="v">'+c.goal+'</div><div class="l">'+(c.isTraining?'훈련':'휴식')+'kcal</div></div><div class="ti"><div class="v" style="color:var(--rd)">-'+c.ex+'</div><div class="l">운동소비</div></div><div class="ti"><div class="v" style="color:var(--gn)">+'+c.di+'</div><div class="l">식단섭취</div></div><div class="ti"><div class="v" style="color:'+(c.remain>=0?'var(--am)':'var(--rd)')+'">'+c.remain+'</div><div class="l">잔여kcal</div></div>';
+var day=gDay();$('dateNav').innerHTML='<div class="wn"><button onclick="dO--;R()">←</button><span class="wb">'+(day.getMonth()+1)+'/'+day.getDate()+' '+DOWF[myDow(day)]+(dO===0?' (오늘)':'')+'</span><button onclick="dO++;R()">→</button></div>';
+rSch()}
 function S(i){cT=i;R()}
 function R(){rTop();var nb='';TABS.forEach(function(t,i){nb+='<button class="nb'+(i===cT?' on':'')+'" onclick="S('+i+')">'+t+'</button>'});$('nv').innerHTML=nb;var h='';for(var i=0;i<TABS.length;i++)h+='<div class="sc'+(i===cT?' on':'')+'" id="s'+i+'"></div>';$('ss').innerHTML=h;[rMs,rIb,rWo,rDi,rDv,rSt][cT]()}
 
@@ -260,7 +263,6 @@ function rMs(){
 var d=gD(),day=gDay(),k=dk(day),wk=wkKey(wO);if(!d.dl[k])d.dl[k]={};if(!d.wl[wk])d.wl[wk]={};
 var dc=0;d.dy.forEach(function(m){if(d.dl[k][m.id])dc++});var dp=d.dy.length?Math.round(dc/d.dy.length*100):0;
 var h='<div style="display:flex;justify-content:space-between;align-items:center"><div class="sl">매일 미션'+(dp>=100?'<span class="cmp" style="color:var(--gn)">🎉 미션완료</span>':'')+'</div><button class="ebtn" onclick="eD()">편집</button></div>';
-h+='<div class="wn"><button onclick="dO--;R()">←</button><span class="wb">'+(day.getMonth()+1)+'/'+day.getDate()+' '+DOWF[myDow(day)]+(dO===0?' (오늘)':'')+'</span><button onclick="dO++;R()">→</button></div>';
 if(d.dy.length){h+='<div style="font-size:9px;color:var(--t3);margin:0 0 3px">← 스와이프하여 삭제</div><div class="cd">';d.dy.forEach(function(m,i){var dn=!!d.dl[k][m.id];h+='<div class="sw-wrap"><div class="sw-inner" ontouchstart="swS(event)" ontouchmove="swM(event)" ontouchend="swE(event)"><div class="sw-content"><div class="ck'+(dn?' dn':'')+'"><div class="ckb" onclick="tD('+i+')">✓</div><div class="cla" onclick="edDy('+i+')">'+(TPN[m.tp||'']||'')+' '+m.lb+'</div>'+(m.cal?'<div class="ck-cal">'+m.cal+'kcal</div>':'')+'</div></div><div class="sw-del" onclick="delDy('+i+')">삭제</div></div></div>'});h+='</div>';
 var bc=dp<30?'var(--rd),var(--rd)':dp<60?'var(--am),var(--am)':dp<100?'var(--bl),var(--gn)':'var(--gn),var(--tl)';
 h+='<div class="pw"><div class="pbg"><div class="pfl" style="width:'+dp+'%;background:linear-gradient(90deg,'+bc+')"></div></div><div class="pi"><span>'+dc+'/'+d.dy.length+'</span><span class="pp">'+dp+'%</span></div></div>';
@@ -273,12 +275,14 @@ else{wd+=Math.min(d.wl[wk][m.id].length,m.tg)}});
 var wp=wt?Math.round(wd/wt*100):0;
 h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><div class="sl">주간 미션'+(wp>=100?'<span class="cmp" style="color:var(--gn)">🔥 미션완료</span>':'')+'</div><button class="ebtn" onclick="eW()">편집</button></div>';
 h+='<div class="wn"><button onclick="wO--;R()">←</button><span class="wb">'+(mon.getMonth()+1)+'/'+mon.getDate()+'-'+(sun.getMonth()+1)+'/'+sun.getDate()+'</span><button onclick="wO++;R()">→</button></div>';
-if(d.wk.length){h+='<div class="cd">';
+if(d.wk.length){h+='<div style="font-size:9px;color:var(--t3);margin:0 0 3px">← 스와이프하여 삭제</div><div class="cd">';
 d.wk.forEach(function(m,mi){if(!d.wl[wk][m.id])d.wl[wk][m.id]=[];var cn=d.wl[wk][m.id].length;
-// woLinked: 실제 체크된 고유 운동일 수로 카운트
 if(m.woLinked){var uq={};d.wl[wk][m.id].forEach(function(s){if(typeof s==='string'&&s.indexOf('|')!==-1)uq[s.split('|')[1]]=1});cn=Object.keys(uq).length}
 var ds=fmtDays(m.days);var dc2=fmtDClr(m.days);
-h+='<div class="wm"><div class="wm-top"><div class="wm-name" onclick="edWk('+mi+')">'+(TPN[m.tp||'']||'')+' '+m.lb+(ds?' <span class="dow-tag" style="background:var(--gl);'+dc2+'">'+ds+'</span>':'')+'</div><div class="wm-cnt" style="color:'+(cn>=m.tg?'var(--gn)':'var(--t2)')+'">'+cn+'/'+m.tg+'</div></div>';
+var isWknd=m.days&&m.days.length===2&&m.days.indexOf(5)!==-1&&m.days.indexOf(6)!==-1;
+var wkndSty=isWknd?'border-left:3px solid var(--bl);':'';
+h+='<div class="sw-wrap"><div class="sw-inner" ontouchstart="swS(event)" ontouchmove="swM(event)" ontouchend="swE(event)"><div class="sw-content">';
+h+='<div class="wm" style="'+wkndSty+'"><div class="wm-top"><div class="wm-name" onclick="edWk('+mi+')">'+(TPN[m.tp||'']||'')+' '+m.lb+(ds?' <span class="dow-tag" style="background:'+(isWknd?'rgba(96,165,250,.15)':'var(--gl)')+';'+(isWknd?'color:var(--bl)':dc2)+'">'+ds+'</span>':'')+'</div><div class="wm-cnt" style="color:'+(cn>=m.tg?'var(--gn)':'var(--t2)')+'">'+cn+'/'+m.tg+'</div></div>';
 h+='<div class="wm-checks">';
 if(m.woLinked&&d.wo.length){
 // 운동 루틴 연동: 각 운동일별 독립 체크
@@ -286,7 +290,7 @@ var checkedIdxs={};d.wl[wk][m.id].forEach(function(s){if(typeof s==='string'&&s.
 var realCn=Object.keys(checkedIdxs).length;
 for(var j=0;j<m.tg;j++){var woLabel=d.wo[j]?d.wo[j].name.slice(0,2):(j+1);var isCk=!!checkedIdxs[j];h+='<div class="wm-dot'+(isCk?' fl':'')+'" onclick="tWL('+mi+','+j+')" style="width:auto;padding:0 8px;font-size:10px">'+(isCk?'✓'+woLabel:woLabel)+'</div>'}
 }else{for(var j=0;j<m.tg;j++){h+='<div class="wm-dot'+(j<cn?' fl':'')+'" onclick="tW('+mi+','+j+')">'+(j<cn?'✓':(j+1))+'</div>'}}
-h+='</div></div>'});h+='</div>';
+h+='</div></div></div><div class="sw-del" onclick="delWkM('+mi+')">삭제</div></div></div>'});h+='</div>';
 var wbc=wp<30?'var(--rd),var(--rd)':wp<60?'var(--am),var(--am)':wp<100?'var(--bl),var(--gn)':'var(--gn),var(--tl)';
 h+='<div class="pw"><div class="pbg"><div class="pfl" style="width:'+wp+'%;background:linear-gradient(90deg,'+wbc+')"></div></div><div class="pi"><span>'+wd+'/'+wt+'</span><span class="pp">'+wp+'%</span></div></div>';
 }else{h+='<div class="nt">편집 버튼으로 주간 미션을 추가하세요!</div>'}
@@ -427,7 +431,19 @@ var todayIdx=0;var found=false;
 d.wo.forEach(function(w,i){if(w.days&&w.days.indexOf(todayDow)!==-1&&!found){todayIdx=i;found=true}});
 // 오늘 해당 없으면 최근 운동 다음 순서로
 if(!found&&d.wo.length){todayIdx=getNextWoIdx(d)}
-var h='<div style="display:flex;justify-content:space-between;align-items:center"><div class="sl">운동 루틴</div><button class="ebtn" onclick="addWoD()">+ 운동일</button></div>';
+var h='';
+// 30일 운동 통계
+var st30={total:0};var now30=new Date();
+for(var dd=0;dd<30;dd++){var dt30=new Date(now30);dt30.setDate(dt30.getDate()-dd);var k30=dk(dt30);var wk30=wkKey(0);
+// 이번주+지난주에서 운동 기록 찾기
+for(var wo30=0;wo30<=4;wo30++){var wk30k=wkKey(-wo30);if(d.wl&&d.wl[wk30k]){d.wk.forEach(function(m){if(!m.woLinked)return;var a=d.wl[wk30k][m.id]||[];
+a.forEach(function(s){if(typeof s==='string'&&s.indexOf('|')!==-1&&s.indexOf(k30+'|')===0){st30.total++;var wi=parseInt(s.split('|')[1]);
+if(d.wo[wi]){var nm=d.wo[wi].name;st30[nm]=(st30[nm]||0)+1}}})})}}}
+h+='<div class="cd" style="margin:0 0 6px;padding:8px"><div style="font-size:12px;font-weight:700;margin:0 0 4px">📊 최근 30일 운동: <span style="color:var(--a2)">'+st30.total+'회</span></div>';
+var st30Keys=Object.keys(st30).filter(function(k){return k!=='total'});
+if(st30Keys.length){h+='<div style="display:flex;flex-wrap:wrap;gap:4px">';st30Keys.forEach(function(k){h+='<span style="font-size:9px;padding:2px 6px;background:var(--gl);color:var(--a2);border-radius:3px">'+k+' '+st30[k]+'회</span>'});h+='</div>'}
+h+='</div>';
+h+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="sl">운동 루틴</div><button class="ebtn" onclick="addWoD()">+ 운동일</button></div>';
 if(d.wo.length){
 // 오늘의 운동 표시
 if(found)h+='<div style="padding:6px 10px;border-radius:var(--s);font-size:12px;font-weight:700;text-align:center;background:var(--gl);color:var(--a2);border:1px solid var(--ac);margin:0 0 6px">📍 오늘의 운동: '+d.wo[todayIdx].name+'</div>';
@@ -439,14 +455,23 @@ h+='<div class="db'+(i===todayIdx?' on':'')+'" data-wi="'+i+'" onclick="DD('+i+'
 h+='<div style="font-size:8px;color:var(--t3);margin:0 0 4px;text-align:center">꾹 누르고 드래그하면 순서 변경</div>';
 d.wo.forEach(function(day,i){h+='<div class="dp'+(i===todayIdx?' on':'')+'" id="dp'+i+'"><div class="cd">';
 h+='<div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 5px"><span style="font-size:13px;font-weight:700">'+day.name+(day.days&&day.days.length?' <span style="font-size:10px;color:var(--t3)">'+day.days.map(function(di){return DOW[di]}).join(' ')+'</span>':'')+'</span><div><button class="ebtn" style="margin-right:3px" onclick="editWoD('+i+')">편집</button><button class="ebtn" style="background:var(--rb);color:var(--rd);border-color:rgba(255,107,107,.2)" onclick="delWoD('+i+')">삭제</button></div></div>';
-if(day.exercises.length){day.exercises.forEach(function(x,xi){
-h+='<div class="x"><div class="xt"><div class="xn">'+x.n+' <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(x.n+' 운동 자세')+'&sp=CAMSAhAB" target="_blank" style="font-size:8px;color:var(--rd);text-decoration:none;vertical-align:middle">▶</a></div>'
-+(x.wt?'<span class="wk-val" onclick="npOpen('+i+','+xi+',\'wt\')">'+x.wt+(x.wu||'kg')+'</span>':'')
-+(x.reps?'<span class="wk-val" onclick="npOpen('+i+','+xi+',\'reps\')">'+x.reps+'회</span>':'')
-+(x.s?'<span class="wk-val" onclick="npOpen('+i+','+xi+',\'s\')">'+x.s+'세트</span>':'')
+if(day.exercises.length){var dayTotalCal=0;day.exercises.forEach(function(x,xi){
+var exCal=Math.round((x.wt||0)*(parseInt(x.reps)||0)*(parseInt(x.s)||0)*0.05+(parseInt(x.reps)||0)*(parseInt(x.s)||0)*1.5);dayTotalCal+=exCal;
+h+='<div class="sw-wrap"><div class="sw-inner" ontouchstart="swS(event)" ontouchmove="swM(event)" ontouchend="swE(event)"><div class="sw-content">';
+h+='<div class="x" onclick="edEx('+i+','+xi+')"><div class="xt"><div class="xn">'+x.n+'</div>'
++(x.wt?'<span class="wk-val" onclick="event.stopPropagation();npOpen('+i+','+xi+',\'wt\')">'+x.wt+(x.wu||'kg')+'</span>':'')
++(x.reps?'<span class="wk-val" onclick="event.stopPropagation();npOpen('+i+','+xi+',\'reps\')">'+x.reps+'회</span>':'')
++(x.s?'<span class="wk-val" onclick="event.stopPropagation();npOpen('+i+','+xi+',\'s\')">'+x.s+'세트</span>':'')
 +(x.r?'<span class="xre">'+x.r+'분</span>':'')
-+'</div>'+(x.d?'<div class="xd">'+x.d+'</div>':'')+'</div>'})}
-else{h+='<div class="nt" style="border-left-color:var(--am)">⚠️ [편집]으로 종목 추가!</div>'}
++(exCal?'<span style="font-size:8px;color:var(--am)">~'+exCal+'kcal</span>':'')
++'</div>'
++'<div style="display:flex;gap:4px;align-items:center">'
++'<a href="https://www.youtube.com/results?search_query='+encodeURIComponent(x.n+' 운동 자세')+'&sp=CAMSAhAB" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--rd);text-decoration:none;padding:3px 8px;background:rgba(255,0,0,.1);border-radius:4px;white-space:nowrap">▶ YT</a>'
++'</div>'
++(x.d?'<div class="xd">'+x.d+'</div>':'')+'</div>';
+h+='</div><div class="sw-del" onclick="delExQ('+i+','+xi+')">삭제</div></div></div>'})}
+else{h+='<div class="nt" style="border-left-color:var(--am)">⚠️ [편집]으로 종목 추가!</div>';var dayTotalCal=0}
+if(day.exercises.length){h+='<div style="font-size:10px;color:var(--am);text-align:right;margin:2px 0">총 소비: ~'+dayTotalCal+'kcal</div>'}
 if(day.exercises.length){var isPaused=wkSt.paused&&wkSt.di===i;
 h+='<div style="margin:8px 0"><button onclick="confirmStartWk('+i+')" style="width:100%;padding:10px;background:linear-gradient(135deg,'+(isPaused?'var(--am),#e6a817':'var(--ac),#5b4adb')+');color:#fff;border:0;border-radius:var(--s);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">'+(isPaused?'⏯ 운동 재개 ('+fmtTime(wkSt.elapsed)+')':'🏋️ 운동 시작')+'</button></div>'}
 h+='</div></div>'});h+='</div>'}
@@ -503,10 +528,14 @@ DOW.forEach(function(d2,di){var chk=day.days&&day.days.indexOf(di)!==-1;h+='<lab
 h+='</div>';
 h+='<div style="margin:4px 0;display:flex;gap:3px"><button class="ebtn" onclick="svWoN('+i+')">저장</button>';
 h+='</div><div class="sb">종목 (터치=수정)</div>';
-day.exercises.forEach(function(x,j){h+='<div class="mi"><button class="midel" onclick="delEx('+i+','+j+')">✕</button><div class="milb" onclick="edEx('+i+','+j+')">'+x.n+(x.wt?' '+x.wt+(x.wu||'kg'):'')+(x.reps?' '+x.reps+'회':'')+(x.s?' '+x.s+'세트':'')+(x.r?' '+x.r+'분':'')+'</div>';
+day.exercises.forEach(function(x,j){
+var isFav=exFav.indexOf(x.n)!==-1;
+h+='<div class="sw-wrap" style="margin:2px 0"><div class="sw-inner" ontouchstart="swS(event)" ontouchmove="swM(event)" ontouchend="swE(event)"><div class="sw-content"><div class="mi">';
+h+='<span style="font-size:13px;cursor:pointer;margin-right:3px" onclick="exTogFavEd(\''+x.n.replace(/'/g,"\\'")+'\','+i+')">'+(isFav?'⭐':'☆')+'</span>';
+h+='<div class="milb" onclick="edEx('+i+','+j+')" style="flex:1">'+x.n+(x.wt?' '+x.wt+(x.wu||'kg'):'')+(x.reps?' '+x.reps+'회':'')+(x.s?' '+x.s+'세트':'')+'</div>';
 if(j>0)h+='<button style="width:24px;height:24px;border-radius:4px;border:1px solid var(--bd);background:var(--b3);color:var(--t2);font-size:10px;cursor:pointer;margin-left:2px" onclick="mvEx('+i+','+j+',-1)">↑</button>';
 if(j<day.exercises.length-1)h+='<button style="width:24px;height:24px;border-radius:4px;border:1px solid var(--bd);background:var(--b3);color:var(--t2);font-size:10px;cursor:pointer;margin-left:2px" onclick="mvEx('+i+','+j+',1)">↓</button>';
-h+='</div>'});
+h+='</div></div><div class="sw-del" onclick="delEx('+i+','+j+')">삭제</div></div></div>'});
 h+='<div class="sb">종목 추가</div>';
 var exParts=["⭐","가슴","등","어깨","이두","삼두","하체","복근","유산소"];
 h+='<div style="display:flex;flex-wrap:wrap;gap:3px;margin:4px 0">';
@@ -629,6 +658,7 @@ else h2='<div style="font-size:11px;color:var(--t3);padding:8px;text-align:cente
 el.innerHTML=h2}
 function exTF(nm,di){loadExFav();var i=exFav.indexOf(nm);if(i>=0)exFav.splice(i,1);else exFav.push(nm);svExFav();exFL(di)}
 function addExDb(di,nm){var d=gD();d.wo[di].exercises.push({n:nm,s:'3',reps:'10',r:'1',d:'',cal:0,wt:0,wu:'kg'});sv(d);editWoD(di);R()}
+function exTogFavEd(nm,di){loadExFav();var i=exFav.indexOf(nm);if(i>=0)exFav.splice(i,1);else exFav.push(nm);svExFav();editWoD(di)}
 function addExMan(di){var n=document.getElementById('exN').value.trim();if(!n)return;var d=gD();d.wo[di].exercises.push({n:n,s:'3',reps:'10',r:'1',d:'',cal:0,wt:0,wu:'kg'});if(!d.pr.customExs)d.pr.customExs=[];d.pr.customExs.push(["기타",n,n.replace(/ /g,'+')]);sv(d);editWoD(di);R()}
 function svWoN(i){var d=gD();d.wo[i].name=$('woN').value||d.wo[i].name;
 var days=[];document.querySelectorAll('.ewdD').forEach(function(cb){if(cb.checked)days.push(parseInt(cb.value))});
@@ -884,6 +914,18 @@ var CAL_DB=[
 ["🍛","잡채","1인분",250],["🍛","떡볶이","1인분",400],["🍛","순대","1인분",250],["🍛","라볶이","1인분",550],["🍛","튀김","1인분",300],
 ["🍛","제육덮밥","1인분",550],["🍛","오징어덮밥","1인분",500],["🍛","김치덮밥","1인분",480],["🍛","카레덮밥","1인분",550],["🍛","불고기덮밥","1인분",530],["🍛","마파두부덮밥","1인분",520],["🍛","참치덮밥","1인분",450],["🍛","치킨덮밥","1인분",580],["🍛","소불고기덮밥","1인분",560],
 ["🥟","만두","5개",250],["🥟","군만두","5개",300],["🍖","족발","100g",230],["🍖","보쌈","100g",200],["🥪","샌드위치","1개",350],["🌯","김밥","1줄",350],["🍣","초밥","1개",45],["🍱","도시락","1개",600],["🥞","전","1장",150],["🧆","동그랑땡","3개",150],["🍖","곱창","100g",200],["🍖","대창","100g",300],
+["🥞","해물파전","1인분",350],["🥞","김치전","1인분",300],["🥞","녹두전","1인분",280],["🥞","부추전","1인분",250],
+["🍜","야키소바","1인분",500],["🍜","볶음우동","1인분",450],["🍜","비빔국수","1인분",400],["🍜","막국수","1인분",400],
+["🍛","닭강정","1인분",450],["🍛","탕수육","1인분",500],["🍛","깐풍기","1인분",400],["🍛","마라탕","1인분",500],["🍛","마라샹궈","1인분",600],
+["🍛","쭈꾸미볶음","1인분",250],["🍛","해물볶음","1인분",300],["🍛","돼지갈비","1인분",400],["🍛","양념갈비","1인분",450],
+["🍛","수육","100g",200],["🍛","닭발","100g",150],["🍛","떡갈비","1개",200],["🍛","핫도그","1개",290],
+["🍛","오므라이스","1인분",550],["🍛","하이라이스","1인분",500],["🍛","치킨마요덮밥","1인분",600],
+["🍛","낙지덮밥","1인분",480],["🍛","회덮밥","1인분",400],
+["🍜","짜장밥","1인분",600],["🍜","탄탄면","1인분",500],
+["🍖","양꼬치","1꼬치",80],["🍖","삼겹살구이","1인분",500],["🍖","목살구이","1인분",400],
+["🌮","타코","1개",200],["🌯","브리또","1개",450],["🥙","케밥","1개",400],["🍛","나시고렝","1인분",450],["🍜","팟타이","1인분",400],
+["🍕","떡피자","1조각",200],["🥐","소금빵","1개",180],["🍞","마늘빵","1조각",150],["🧇","크루아상와플","1개",300],
+["🥤","스무디","1잔",250],["🥤","밀크쉐이크","1잔",400],["☕","모카","1잔",300],["☕","프라푸치노","1잔",380],
 ["🍰","케이크","1조각",350],["🍩","도넛","1개",250],["🍦","아이스크림","1개",200],["🍫","초콜릿바","1개",250],["🍪","쿠키","1개",80],["🍡","떡","1개",120],["🥧","호떡","1개",250],["🧁","머핀","1개",300],["🍿","팝콘","1봉",400],["🧇","와플","1개",280],["🍢","어묵","1꼬치",60],
 ["☕","아메리카노","1잔",5],["☕","카페라떼","1잔",180],["☕","카푸치노","1잔",120],["☕","바닐라라떼","1잔",250],["☕","카라멜마키아또","1잔",280],
 ["🧋","버블티","1잔",400],["🥤","콜라","355ml",140],["🥤","사이다","355ml",140],["🥤","오렌지주스","200ml",90],["🧃","이온음료","500ml",125],["🥤","에너지드링크","250ml",115],
@@ -1040,6 +1082,8 @@ function swS(e){swState.sx=e.touches[0].clientX;swState.el=e.currentTarget}
 function swM(e){if(!swState.el)return;var dx=e.touches[0].clientX-swState.sx;if(dx>0)dx=0;if(dx<-70)dx=-70;swState.el.style.transform='translateX('+dx+'px)';if(dx<-15)e.preventDefault()}
 function swE(e){if(!swState.el)return;var dx=(e.changedTouches?e.changedTouches[0].clientX:swState.sx)-swState.sx;swState.el.style.transform=dx<-35?'translateX(-70px)':'translateX(0)';swState.el=null}
 function delDy(i){var d=gD();d.dy.splice(i,1);sv(d);R()}
+function delWkM(i){var d=gD();d.wk.splice(i,1);sv(d);R()}
+function delExQ(di,ei){var d=gD();d.wo[di].exercises.splice(ei,1);sv(d);R()}
 // 터치 사운드 + iOS 오디오 초기화
 function tick(){try{if(!gAC)return;if(gAC.state==='suspended')gAC.resume();var o=gAC.createOscillator();var g=gAC.createGain();o.connect(g);g.connect(gAC.destination);o.type='sine';o.frequency.value=1200;g.gain.value=0.08;o.start();g.gain.setValueAtTime(0.08,gAC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,gAC.currentTime+0.04);o.stop(gAC.currentTime+0.04)}catch(e){}}
 document.addEventListener('click',function(e){
